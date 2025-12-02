@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 
@@ -21,9 +22,9 @@ func (s *server) Get(ctx context.Context, req *note_v1.GetRequest) (*note_v1.Get
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":#{grpcPort}")
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
-		log.Fatalf("failed to listen: #{err}")
+		log.Fatalf("failed to listen: %s", err)
 	}
 
 	s := grpc.NewServer()
@@ -31,10 +32,10 @@ func main() {
 
 	note_v1.RegisterNoteV1Server(s, &server{})
 
-	log.Printf("Server listining at #{lis.Addr()} ")
+	log.Printf("Server listining at %s", lis.Addr())
 
 	if err = s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: #{err}")
+		log.Fatalf("failed to serve: %s", err)
 	}
 
 }
