@@ -75,6 +75,22 @@ func main() {
 		}
 		log.Printf("id: %d, title: %s, body: %s, created_at: %s, updated_at: %s", id, title, body, created_at.Format("02-01-2006"), handleNullTime(updated_at))
 	}
+
+	builderUpdate := sq.Update("note").
+		PlaceholderFormat(sq.Dollar).
+		Set("title", gofakeit.City()).
+		Set("body", gofakeit.Address().Street).
+		Set("updated_at", time.Now()).
+		Where(sq.Eq{"id": noteID})
+	query, args, err = builderUpdate.ToSql()
+	if err != nil {
+		log.Fatalf("failed to build query: %s", err)
+	}
+	res, err := con.Exec(ctx, query, args...)
+	if err != nil {
+		log.Fatalf("failed to insert notes: %s", err)
+	}
+	log.Printf("Updated %d rows", res.RowsAffected())
 }
 
 func handleNullTime(tm sql.NullTime) string {
