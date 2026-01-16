@@ -15,3 +15,11 @@ services:
       - '${PG_PORT}:5432'
     volumes:
       - /c/Docker/pgdata:/var/lib/postgresql/data
+
+  # migrator:
+  #   build:
+  #     context: .
+  #     dockerfile: migration.dockerfile
+  #   restart: on-failture
+  #   environment:
+  #     DB_HOST: pg
