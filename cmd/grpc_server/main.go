@@ -7,9 +7,9 @@ import (
 	"net"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	noteAPI "github.com/lva100/go-grpc/internal/api/note"
 	"github.com/lva100/go-grpc/internal/config"
 	"github.com/lva100/go-grpc/internal/config/env"
-	"github.com/lva100/go-grpc/internal/converter"
 	"github.com/lva100/go-grpc/internal/repository/note"
 	"github.com/lva100/go-grpc/internal/service"
 	"github.com/lva100/go-grpc/pkg/note_v1"
@@ -23,7 +23,7 @@ func init() {
 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
 }
 
-type server struct {
+/*type server struct {
 	note_v1.UnimplementedNoteV1Server
 	noteService service.NoteService
 }
@@ -50,7 +50,7 @@ func (s *server) Get(ctx context.Context, req *note_v1.GetRequest) (*note_v1.Get
 	return &note_v1.GetResponse{
 		Note: converter.ToNoteFromService(noteObj),
 	}, nil
-}
+}*/
 
 // func handleNullTime(tm sql.NullTime) string {
 // 	if tm.Valid {
@@ -95,7 +95,7 @@ func main() {
 	s := grpc.NewServer()
 	reflection.Register(s)
 
-	note_v1.RegisterNoteV1Server(s, &server{noteService: noteSrv})
+	note_v1.RegisterNoteV1Server(s, noteAPI.NewImplementation(noteSrv))
 
 	log.Printf("Server listining at %s", lis.Addr())
 
