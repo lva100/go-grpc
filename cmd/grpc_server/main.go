@@ -7,10 +7,11 @@ import (
 	"net"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	noteAPI "github.com/lva100/go-grpc/internal/api/note"
 	"github.com/lva100/go-grpc/internal/config"
 	"github.com/lva100/go-grpc/internal/config/env"
-	"github.com/lva100/go-grpc/internal/repository"
 	"github.com/lva100/go-grpc/internal/repository/note"
+	"github.com/lva100/go-grpc/internal/service"
 	"github.com/lva100/go-grpc/pkg/note_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -22,13 +23,13 @@ func init() {
 	flag.StringVar(&configPath, "config-path", ".env", "path to config file")
 }
 
-type server struct {
+/*type server struct {
 	note_v1.UnimplementedNoteV1Server
-	noteRepository repository.NoteRepository
+	noteService service.NoteService
 }
 
 func (s *server) Create(ctx context.Context, req *note_v1.CreateRequest) (*note_v1.CreateResponse, error) {
-	id, err := s.noteRepository.Create(ctx, req.GetInfo())
+	id, err := s.noteService.Create(ctx, converter.ToNoteInfoFromDesc(req.GetInfo()))
 	if err != nil {
 		return nil, err
 	}
@@ -41,15 +42,15 @@ func (s *server) Create(ctx context.Context, req *note_v1.CreateRequest) (*note_
 }
 
 func (s *server) Get(ctx context.Context, req *note_v1.GetRequest) (*note_v1.GetResponse, error) {
-	noteObj, err := s.noteRepository.Get(ctx, req.GetId())
+	noteObj, err := s.noteService.Get(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
 
 	return &note_v1.GetResponse{
-		Note: noteObj,
+		Note: converter.ToNoteFromService(noteObj),
 	}, nil
-}
+}*/
 
 // func handleNullTime(tm sql.NullTime) string {
 // 	if tm.Valid {
@@ -89,11 +90,12 @@ func main() {
 	defer pool.Close()
 
 	noteRepo := note.NewRepository(pool)
+	noteSrv := service.NoteService(noteRepo)
 
 	s := grpc.NewServer()
 	reflection.Register(s)
 
-	note_v1.RegisterNoteV1Server(s, &server{noteRepository: noteRepo})
+	note_v1.RegisterNoteV1Server(s, noteAPI.NewImplementation(noteSrv))
 
 	log.Printf("Server listining at %s", lis.Addr())
 

@@ -7,10 +7,10 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/brianvoe/gofakeit"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/lva100/go-grpc/internal/model"
 	"github.com/lva100/go-grpc/internal/repository"
 	"github.com/lva100/go-grpc/internal/repository/note/converter"
-	"github.com/lva100/go-grpc/internal/repository/note/model"
-	"github.com/lva100/go-grpc/pkg/note_v1"
+	modelRepo "github.com/lva100/go-grpc/internal/repository/note/model"
 )
 
 const (
@@ -31,7 +31,7 @@ func NewRepository(db *pgxpool.Pool) repository.NoteRepository {
 	return &repo{db: db}
 }
 
-func (r *repo) Create(ctx context.Context, info *note_v1.NoteInfo) (int64, error) {
+func (r *repo) Create(ctx context.Context, info *model.NoteInfo) (int64, error) {
 	builderInsert := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns(titleColumn, contentColumn).
@@ -51,7 +51,7 @@ func (r *repo) Create(ctx context.Context, info *note_v1.NoteInfo) (int64, error
 	return id, nil
 }
 
-func (r *repo) Get(ctx context.Context, id int64) (*note_v1.Note, error) {
+func (r *repo) Get(ctx context.Context, id int64) (*model.Note, error) {
 	builderSelectOne := sq.Select(idColumn, titleColumn, contentColumn, createdAtColumn, updatedAtColumn).
 		From(tableName).
 		PlaceholderFormat(sq.Dollar).
@@ -63,11 +63,11 @@ func (r *repo) Get(ctx context.Context, id int64) (*note_v1.Note, error) {
 		log.Fatalf("failed to build query: %s", err)
 	}
 
-	var note model.Note
+	var note modelRepo.Note
 
 	err = r.db.QueryRow(ctx, query, args...).Scan(&note.Id, &note.Info.Title, &note.Info.Content, &note.CreatedAt, &note.UpdatedAt)
 	if err != nil {
-		log.Fatalf("failed to insert notes: %s", err)
+		log.Printf("failed to selected notes: %s", err)
 	}
 
 	return converter.ToNoteFromRepo(&note), nil
