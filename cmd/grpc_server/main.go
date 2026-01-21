@@ -9,6 +9,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/lva100/go-grpc/internal/config"
 	"github.com/lva100/go-grpc/internal/config/env"
+	"github.com/lva100/go-grpc/internal/repository"
+	"github.com/lva100/go-grpc/internal/repository/note"
 	"github.com/lva100/go-grpc/pkg/note_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -22,11 +24,40 @@ func init() {
 
 type server struct {
 	note_v1.UnimplementedNoteV1Server
+	noteRepository repository.NoteRepository
+}
+
+func (s *server) Create(ctx context.Context, req *note_v1.CreateRequest) (*note_v1.CreateResponse, error) {
+	id, err := s.noteRepository.Create(ctx, req.GetInfo())
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Inserted note with id: %d", id)
+
+	return &note_v1.CreateResponse{
+		Id: id,
+	}, nil
 }
 
 func (s *server) Get(ctx context.Context, req *note_v1.GetRequest) (*note_v1.GetResponse, error) {
-	return &note_v1.GetResponse{}, nil
+	noteObj, err := s.noteRepository.Get(ctx, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &note_v1.GetResponse{
+		Note: noteObj,
+	}, nil
 }
+
+// func handleNullTime(tm sql.NullTime) string {
+// 	if tm.Valid {
+// 		return tm.Time.Format("02-01-2006")
+// 	} else {
+// 		return "-/-/-"
+// 	}
+// }
 
 func main() {
 	flag.Parse()
@@ -57,10 +88,12 @@ func main() {
 	}
 	defer pool.Close()
 
+	noteRepo := note.NewRepository(pool)
+
 	s := grpc.NewServer()
 	reflection.Register(s)
 
-	note_v1.RegisterNoteV1Server(s, &server{})
+	note_v1.RegisterNoteV1Server(s, &server{noteRepository: noteRepo})
 
 	log.Printf("Server listining at %s", lis.Addr())
 
