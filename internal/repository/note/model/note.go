@@ -7,12 +7,12 @@ import (
 
 type Note struct {
 	Id        int64        `db:"id"`
-	Info      Info         `db:""`
+	Info      NoteInfo     `db:""`
 	CreatedAt time.Time    `db:"created_at"`
 	UpdatedAt sql.NullTime `db:"updated_at"`
 }
 
-type Info struct {
+type NoteInfo struct {
 	Title   string `db:"title"`
 	Content string `db:"content"`
 }

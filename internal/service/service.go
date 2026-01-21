@@ -1,4 +1,4 @@
-package repository
+package service
 
 import (
 	"context"
@@ -6,8 +6,7 @@ import (
 	"github.com/lva100/go-grpc/internal/model"
 )
 
-type NoteRepository interface {
+type NoteService interface {
 	Create(ctx context.Context, info *model.NoteInfo) (int64, error)
 	Get(ctx context.Context, id int64) (*model.Note, error)
-	// Get1(ctx context.Context, id int64) (string, error)
 }
