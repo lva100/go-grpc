@@ -7,6 +7,7 @@ import (
 	"github.com/lva100/go-grpc/internal/api/note"
 	"github.com/lva100/go-grpc/internal/client/db"
 	"github.com/lva100/go-grpc/internal/client/db/pg"
+	"github.com/lva100/go-grpc/internal/client/db/transaction"
 	"github.com/lva100/go-grpc/internal/closer"
 	"github.com/lva100/go-grpc/internal/config"
 	"github.com/lva100/go-grpc/internal/config/env"
@@ -21,6 +22,7 @@ type serviceProvider struct {
 	grpcConfig config.GRPCConfig
 
 	dbClient       db.Client
+	txManager      db.TxManager
 	noteRepository repository.NoteRepository
 
 	noteService service.NoteService
@@ -54,7 +56,7 @@ func (s *serviceProvider) GRPCConfig() config.GRPCConfig {
 	return s.grpcConfig
 }
 
-func (s *serviceProvider) PgPool(ctx context.Context) db.Client {
+func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	if s.dbClient == nil {
 		cl, err := pg.New(ctx, s.PGConfig().DSN())
 		if err != nil {
@@ -73,16 +75,23 @@ func (s *serviceProvider) PgPool(ctx context.Context) db.Client {
 	return s.dbClient
 }
 
+func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
+	if s.txManager == nil {
+		s.txManager = transaction.NewTransactionManager(s.DBClient(ctx).DB())
+	}
+	return s.txManager
+}
+
 func (s *serviceProvider) NoteRepository(ctx context.Context) repository.NoteRepository {
 	if s.noteRepository == nil {
-		s.noteRepository = noteRepository.NewRepository(s.PgPool(ctx))
+		s.noteRepository = noteRepository.NewRepository(s.DBClient(ctx))
 	}
 	return s.noteRepository
 }
 
 func (s *serviceProvider) NoteService(ctx context.Context) service.NoteService {
 	if s.noteService == nil {
-		s.noteService = noteService.NewService(s.NoteRepository(ctx))
+		s.noteService = noteService.NewService(s.NoteRepository(ctx), s.TxManager(ctx))
 	}
 	return s.noteService
 }

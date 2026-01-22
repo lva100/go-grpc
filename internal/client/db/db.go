@@ -7,14 +7,23 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+type Handler func(ctx context.Context) error
 type Client interface {
 	DB() DB
 	Close() error
 }
 
+type TxManager interface {
+	ReadCommited(ctx context.Context, f Handler) error
+}
+
 type Query struct {
 	Name     string
 	QueryRaw string
+}
+
+type Transactor interface {
+	BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error)
 }
 
 type SQLExecer interface {
@@ -39,6 +48,7 @@ type Pinger interface {
 
 type DB interface {
 	SQLExecer
+	Transactor
 	Pinger
 	Close()
 }

@@ -25,6 +25,7 @@ require (
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/randallmlough/pgxscan v0.3.0 // indirect
 	github.com/randallmlough/sqlmaper v0.0.0-20191117174101-7ad100a86097 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
