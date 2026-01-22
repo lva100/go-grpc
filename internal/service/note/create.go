@@ -11,7 +11,7 @@ func (s *serv) Create(ctx context.Context, info *model.NoteInfo) (int64, error) 
 
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
 		var errTx error
-		id, errTx := s.noteRepository.Create(ctx, info)
+		id, errTx = s.noteRepository.Create(ctx, info)
 		if errTx != nil {
 			return errTx
 		}
