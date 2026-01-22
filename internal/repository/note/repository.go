@@ -6,7 +6,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/brianvoe/gofakeit"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/lva100/go-grpc/internal/client/db"
 	"github.com/lva100/go-grpc/internal/model"
 	"github.com/lva100/go-grpc/internal/repository"
 	"github.com/lva100/go-grpc/internal/repository/note/converter"
@@ -24,10 +24,10 @@ const (
 )
 
 type repo struct {
-	db *pgxpool.Pool
+	db db.Client
 }
 
-func NewRepository(db *pgxpool.Pool) repository.NoteRepository {
+func NewRepository(db db.Client) repository.NoteRepository {
 	return &repo{db: db}
 }
 
@@ -42,10 +42,14 @@ func (r *repo) Create(ctx context.Context, info *model.NoteInfo) (int64, error) 
 	if err != nil {
 		log.Fatalf("failed to build query: %s", err)
 	}
+	q := db.Query{
+		Name:     "note_repository.Create",
+		QueryRaw: query,
+	}
 	var id int64
-	err = r.db.QueryRow(ctx, query, args...).Scan(&id)
+	err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&id)
 	if err != nil {
-		log.Fatalf("failed to insert notes: %s", err)
+		return 0, err
 	}
 
 	return id, nil
@@ -63,11 +67,17 @@ func (r *repo) Get(ctx context.Context, id int64) (*model.Note, error) {
 		log.Fatalf("failed to build query: %s", err)
 	}
 
+	q := db.Query{
+		Name:     "note_repository.Get",
+		QueryRaw: query,
+	}
+
 	var note modelRepo.Note
 
-	err = r.db.QueryRow(ctx, query, args...).Scan(&note.Id, &note.Info.Title, &note.Info.Content, &note.CreatedAt, &note.UpdatedAt)
+	// err = r.db.DB().QueryRowContext(ctx, q, args...).Scan(&note.Id, &note.Info.Title, &note.Info.Content, &note.CreatedAt, &note.UpdatedAt)
+	err = r.db.DB().ScanOneContext(ctx, &note, q, args...)
 	if err != nil {
-		log.Printf("failed to selected notes: %s", err)
+		return nil, err
 	}
 
 	return converter.ToNoteFromRepo(&note), nil
