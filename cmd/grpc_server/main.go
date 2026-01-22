@@ -4,17 +4,8 @@ import (
 	"context"
 	"flag"
 	"log"
-	"net"
 
-	"github.com/jackc/pgx/v4/pgxpool"
-	noteAPI "github.com/lva100/go-grpc/internal/api/note"
-	"github.com/lva100/go-grpc/internal/config"
-	"github.com/lva100/go-grpc/internal/config/env"
-	"github.com/lva100/go-grpc/internal/repository/note"
-	"github.com/lva100/go-grpc/internal/service"
-	"github.com/lva100/go-grpc/pkg/note_v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"github.com/lva100/go-grpc/internal/app"
 )
 
 var configPath string
@@ -64,7 +55,16 @@ func main() {
 	flag.Parse()
 	ctx := context.Background()
 
-	err := config.Load(configPath)
+	a, err := app.NewApp(ctx)
+	if err != nil {
+		log.Fatalf("failed to init app: %s", err)
+	}
+
+	err = a.Run()
+	if err != nil {
+		log.Fatalf("failed to run app: %s", err)
+	}
+	/*err := config.Load(configPath)
 	if err != nil {
 		log.Fatalf("Could`t load config file: %s", err)
 	}
@@ -102,5 +102,5 @@ func main() {
 	if err = s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %s", err)
 	}
-
+	*/
 }
