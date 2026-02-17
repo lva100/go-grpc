@@ -6,7 +6,7 @@ import (
 	"github.com/lva100/go-grpc/internal/model"
 )
 
-func (s *serv) Create(ctx context.Context, info *model.NoteInfo) (int64, error) {
+/*func (s *serv) Create(ctx context.Context, info *model.NoteInfo) (int64, error) {
 	var id int64
 
 	err := s.txManager.ReadCommited(ctx, func(ctx context.Context) error {
@@ -26,4 +26,12 @@ func (s *serv) Create(ctx context.Context, info *model.NoteInfo) (int64, error) 
 		return 0, err
 	}
 	return id, nil
+}*/
+
+func (s *serv) Create(ctx context.Context, info *model.NoteInfo) (int64, error) {
+	note, err := s.noteRepository.Create(ctx, info)
+	if err != nil {
+		return 0, err
+	}
+	return note, nil
 }
