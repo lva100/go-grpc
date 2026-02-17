@@ -17,3 +17,9 @@ func NewService(noteRepository repository.NoteRepository, txManager db.TxManager
 		txManager:      txManager,
 	}
 }
+
+func NewMockService(noteRepository repository.NoteRepository) service.NoteService {
+	return &serv{
+		noteRepository: noteRepository,
+	}
+}
